@@ -1,0 +1,204 @@
+﻿@model X.PagedList.PagedList<TWTask.Dtos.EmployeeDto>
+@using X.PagedList.Mvc.Core;
+@using X.PagedList
+@{
+    var employee = ViewBag.model as TWTask.Dtos.EmployeeDto;
+}
+<style>
+
+    .pagination a {
+        color: black;
+        float: left;
+        padding: 3px 25px;
+        text-decoration: none;
+        background-color: white;
+    }
+
+
+        .pagination a:hover:not(.active) {
+            background-color: #ddd;
+        }
+</style>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addModal">
+    Add Employee
+</button>
+
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Add Employee</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @Html.ValidationSummary(true,"",new{@Class="text-danger"})
+            <div class="modal-body">
+                <div class="modal-body">
+                    <form method="post" name="employeeForm">
+                        <div class"form-group">
+                            @Html.TextBoxFor(Model => employee!.Name,new {@id="nameData",@class ="form-control",placeholder="Name"} )
+                        </div>
+                        @Html.ValidationMessageFor(Model => employee!.Name,"",new{@Class="text-danger"})
+                        <div class"form-group">
+                            @Html.TextBoxFor(Model => employee!.Age,new {id="ageData",@class ="form-control",placeholder="Age"})
+                        </div>
+                        @Html.ValidationMessageFor(Model => employee!.Age,"",new{@Class="text-danger"})
+
+                        <div class"form-group">
+                            @Html.TextBoxFor(Model => employee!.Description,new {id="descriptionData",@class ="form-control",placeholder="Description"})
+                        </div>
+                        @Html.ValidationMessageFor(Model => employee!.Description ,"",new{@Class="text-danger"})
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnAdd">Add New</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="FormModalEmployeeUpdate" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateModalLabel">Update Employee</h5>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body">
+                    <form method="post">
+                        <input type="hidden" name="EmployeeId" id="employeeId" />
+                        <input type="text" class="form-control" name="EmployeeName" id="employeeName" />
+                        <input type="text" class="form-control" name="EmployeeAge" id="employeeAge" />
+                        <input type="text" class="form-control" name="Description" id="description" />
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnCloseModal" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btn_edit">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <h1>Employees</h1>
+    </div>
+</div>
+<br />
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Description</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Age</td>
+                <td>
+                    @foreach (var address in item.Addresses)
+                    {
+
+                        @address.Description
+
+                    }
+                </td>
+                <td>
+                    <a class="btn btn-success" onclick="btn_update(@item.Id)">Edit</a>|
+                    <a onclick="Delete(this,@item.Id)" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+<a class="pagination">
+    @Html.PagedListPager((IPagedList) Model, page => Url.Action("Index", new {page = page}))
+</a>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+        $('#btnCloseModal').click(function() {
+       $('#FormModalEmployeeUpdate').modal('hide');
+    });
+        $(document).ready(function () {
+            $("#btnAdd").click(function () {
+                debugger
+                 var name = $("#nameData").val();
+                 var age = $("#ageData").val();
+                 var description = $("#descriptionData").val();
+                 var numAge = parseInt(age);
+                 var body = {name , age:numAge , description}
+                $.ajax({
+                    type:"POST",
+                    url:'@Url.Action("Create","Employee")/',
+                    data: body,
+                    success : function(result){
+                        debugger
+                        window.location.href = '/Employee/Index'
+                    }, error: function(){
+                    }
+                });
+            });
+
+            $("#btn_edit").click(function () {
+                debugger
+                 var id = $("#employeeId").val();
+                 var name = $("#employeeName").val();
+                 var age = $("#employeeAge").val();
+                 var description = $("#description").val();
+                 var numId = parseInt(id);
+                 var numAge = parseInt(age);
+                 var body = {'id':id , name ,'age': numAge , description}
+                $.ajax({
+                    type:"POST",
+                    url:'@Url.Action("Update","Employee")/',
+                    data: body,
+                    success : function(result){
+                        debugger
+                        window.location.href = '/Employee/Index'
+                    }
+                });
+            });
+        })
+
+        function btn_update(Id){
+            $('#FormModalEmployeeUpdate').modal('show');
+            var url = "/Employee/GetEmployeeById?id=" + Id;
+            $.ajax({
+                type:"GET",
+                url: url,
+                success: function(response){
+                    debugger
+                    $('#employeeId').val(response.id)
+                    $('#employeeName').val(response.name)
+                    $('#employeeAge').val(response.age)
+                    $('#description').val(response.addresses[0].description)
+
+                }
+            });
+        }
+        function Delete(confirm,id) {
+            debugger
+            var prm = {id}
+                $.ajax({
+                    type: "Post",
+                    url: '@Url.Action("DeleteEmployee","Employee")/',
+                    data: prm,
+                    success: function (result) {
+                        $(confirm).closest('tr').remove();
+                    }
+                });
+
+        }
+</script>
